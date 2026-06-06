@@ -1,0 +1,11 @@
+# Ignorar carpetas de caché de Python
+__pycache__/
+*.pyc
+
+# Ignorar archivos ocultos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ignorar configuraciones de editores de código (opcional)
+.vscode/
+.idea/
