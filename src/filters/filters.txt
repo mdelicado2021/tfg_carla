@@ -1,0 +1,11 @@
+Filtrado de Espacios de Color (Thresholding)
+Transformas el fotograma RGB de la cámara a espacios como HLS o HSV para aplicar umbrales numéricos. Esto aísla exclusivamente los valores correspondientes a la pintura blanca y amarilla de las marcas viales, convirtiendo el asfalto y el entorno en píxeles negros.
+
+Detección de Bordes (Filtro Canny)
+Se aplica sobre la imagen filtrada (o en escala de grises) para calcular los gradientes de intensidad. El algoritmo resalta los contornos exactos y los cambios de contraste bruscos donde la carretera termina y comienza la línea.
+
+Transformada de Hough (Hough Line Transform)
+Es el algoritmo estándar para extraer geometrías de una imagen. Analiza el mapa de bordes resultante de Canny, busca píxeles colineales y devuelve las coordenadas matemáticas de los segmentos rectos que conforman los límites del carril.
+
+Algoritmo de Ventanas Deslizantes (Sliding Windows)
+Aprovecha el Mapeo Inverso de Perspectiva (IPM) que acabas de programar. Al transformar la imagen frontal a una vista de pájaro (top-down), el algoritmo divide la carretera en secciones horizontales. Rastrea la densidad de píxeles blancos en cada sección para seguir la trayectoria y, finalmente, ajusta un polinomio que modela perfectamente las curvas.
