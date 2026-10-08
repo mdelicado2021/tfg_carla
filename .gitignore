@@ -9,3 +9,8 @@ Thumbs.db
 # Ignorar configuraciones de editores de código (opcional)
 .vscode/
 .idea/
+
+# Archivos pesados de Deep Learning
+*.zip
+*.pth
+dataset/
