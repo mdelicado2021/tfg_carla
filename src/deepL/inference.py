@@ -11,6 +11,10 @@ import queue
 import rclpy
 from sensor_msgs.msg import PointCloud2, PointField
 import signal
+import time
+import os
+
+historial_tiempos = []
 
 def empaquetar_pointcloud2(puntos_3d, frame_id="carla_camera"):
     msg = PointCloud2()
@@ -89,6 +93,8 @@ modelo.eval()
 
 
 def procesar_camara(img_rgb, profundidad_metros, K):
+    t_inicio = time.perf_counter()
+
     # --- 1. PROCESAMIENTO RGB ---
     # Ya recibimos img_rgb como NumPy array desde el callback
     img_rgb_small = cv2.resize(img_rgb, (400, 300))
@@ -118,6 +124,11 @@ def procesar_camara(img_rgb, profundidad_metros, K):
 
         # Adaptación de cámara a ROS2
         puntos_3d = np.column_stack((Z_validos, -X, -Y))
+
+    t_fin = time.perf_counter()
+    tiempo_ms = (t_fin - t_inicio) * 1000.0
+    historial_tiempos.append(tiempo_ms)
+    print(f"Latencia Percepción (U-Net + Proyección 3D): {tiempo_ms:.2f} ms")
 
     # --- 3. DIBUJADO PARA PYGAME ---
     lienzo_prediccion = np.zeros_like(img_rgb)
@@ -168,10 +179,17 @@ def main():
         print("Conectando con CARLA...")
         client = carla.Client('localhost', 2000)
         client.set_timeout(60.0)
+        map_name = 'Town04'
         world = client.get_world()
+
+        # Solo recarga el mundo si no estamos ya en Town06
+        if not world.get_map().name.endswith(map_name):
+            print(f"Cargando el mapa {map_name}. El simulador se congelará unos segundos...")
+            world = client.load_world(map_name)
         
         original_settings = world.get_settings()
         settings = world.get_settings()
+
         settings.synchronous_mode = True 
         settings.fixed_delta_seconds = 0.05 
         world.apply_settings(settings)
@@ -225,7 +243,11 @@ def main():
         
         running = True
         while running:
-            world.tick() 
+            world.tick()
+            
+            if len(historial_tiempos) >= 100:
+                print("Límite de 100 fotogramas alcanzado. Guardando resultados...")
+                running = False
             
             # Sacamos las matrices independientes de cada buzón
             frame_rgb, img_rgb = image_queue_rgb.get()
@@ -256,6 +278,14 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        print("Guardando registro de tiempos...")
+        path_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'times'))
+        if not os.path.exists(path_dir):
+            os.makedirs(path_dir)
+            
+        path_file = os.path.join(path_dir, 'unet_times.txt')
+        np.savetxt(path_file, historial_tiempos)
+
         print("Limpiando entorno y restaurando simulador...")
         # 1. Apagar y destruir sensores
         if camara_frontal is not None: 

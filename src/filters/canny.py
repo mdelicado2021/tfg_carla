@@ -3,8 +3,14 @@ import random
 import pygame
 import numpy as np
 import cv2
+import time
+import os
+
+historial_tiempos = []
 
 def procesar_camara_frontal(imagen, superficie_pygame):
+    t_inicio = time.perf_counter()
+
     # 1. Extraer la imagen original bruta
     array = np.frombuffer(imagen.raw_data, dtype=np.dtype("uint8"))
     array = np.reshape(array, (imagen.height, imagen.width, 4))
@@ -41,6 +47,11 @@ def procesar_camara_frontal(imagen, superficie_pygame):
     # ================= PASO 3: CANNY (Detección de Bordes) =================
     # Aplicamos Canny sobre la máscara binaria para extraer solo las siluetas finas
     bordes = cv2.Canny(mascara_filtrada_roi, 50, 150)
+
+    t_fin = time.perf_counter()
+    tiempo_ms = (t_fin - t_inicio) * 1000.0
+    historial_tiempos.append(tiempo_ms)
+    print(f"Latencia Percepción (Canny): {tiempo_ms:.2f} ms")
     
     imagen_canny = np.dstack((bordes, bordes, bordes))
     
@@ -71,10 +82,17 @@ def main():
         print("Conectando con CARLA...")
         client = carla.Client('localhost', 2000)
         client.set_timeout(10.0)
+        map_name = 'Town04'
         world = client.get_world()
+
+        # Solo recarga el mundo si no estamos ya en Town06
+        if not world.get_map().name.endswith(map_name):
+            print(f"Cargando el mapa {map_name}. El simulador se congelará unos segundos...")
+            world = client.load_world(map_name)
         
         original_settings = world.get_settings()
         settings = world.get_settings()
+
         settings.synchronous_mode = True 
         settings.fixed_delta_seconds = 0.05 
         world.apply_settings(settings)
@@ -101,7 +119,10 @@ def main():
         
         running = True
         while running:
-            world.tick() 
+            world.tick()
+            if len(historial_tiempos) >= 100:
+                print("Límite de 100 fotogramas alcanzado. Guardando resultados...")
+                running = False
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -110,6 +131,14 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        print("Guardando registro de tiempos...")
+        path_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'times'))
+        if not os.path.exists(path_dir):
+            os.makedirs(path_dir)
+            
+        path_file = os.path.join(path_dir, 'canny_times.txt')
+        np.savetxt(path_file, historial_tiempos)
+
         if world is not None and original_settings is not None:
             world.apply_settings(original_settings)
         if camara_frontal is not None: camara_frontal.destroy()
