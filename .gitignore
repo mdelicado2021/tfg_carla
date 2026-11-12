@@ -17,3 +17,6 @@ dataset/
 
 # Registros de rendimiento local
 times/*.txt
+
+# Repositorios de terceros e integraciones externas
+src/external/

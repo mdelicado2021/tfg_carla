@@ -11,13 +11,14 @@ CARPETA_GRAFICAS = os.path.join(DIRECTORIO_RAIZ, 'plots')
 if not os.path.exists(CARPETA_GRAFICAS):
     os.makedirs(CARPETA_GRAFICAS)
 
-# 2. Diccionario con los nombres exactos de tus archivos
+# Diccionario con los nombres exactos de los archivos
 algoritmos = {
     'Thresholding': 'thresholding_times.txt',
     'Canny': 'canny_times.txt',
     'Hough': 'hough_times.txt',
     'Sliding Windows': 'sliding_times.txt',
-    'U-Net (CPU)': 'unet_times.txt'
+    'U-Net (CPU)': 'unet_times.txt',
+    'UFLD (GPU)': 'ufld_times.txt'
 }
 
 medias_ms = []
@@ -60,7 +61,7 @@ for nombre, nombre_archivo in algoritmos.items():
 if nombres_validos:
     plt.figure(figsize=(10, 6))
     
-    colores_base = ['#a8d0e6', '#f8e9a1', '#f76c6c', '#374785', '#24305e']
+    colores_base = ['#a8d0e6', '#f8e9a1', '#f76c6c', '#374785', '#24305e', '#16697a']
     colores = colores_base[:len(nombres_validos)]
     
     bars = plt.bar(nombres_validos, medias_ms, color=colores)
