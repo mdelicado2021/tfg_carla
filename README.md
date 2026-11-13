@@ -1,5 +1,5 @@
-## Despliegue de modelos de terceros
-Para ejecutar la comparativa neuronal con UFLD, es necesario clonar el repositorio original dentro del espacio de trabajo antes de lanzar el script de inferencia:
+## Deploying third-party models
+To run the neural network comparison using UFLD, you must clone the original repository into the workspace before running the inference script:
 
 ```bash
 mkdir -p src/external
