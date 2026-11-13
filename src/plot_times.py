@@ -18,7 +18,7 @@ algoritmos = {
     'Hough': 'hough_times.txt',
     'Sliding Windows': 'sliding_times.txt',
     'U-Net (CPU)': 'unet_times.txt',
-    'UFLD (GPU)': 'ufld_times.txt'
+    'UFLD (CPU)': 'ufld_times.txt'
 }
 
 medias_ms = []

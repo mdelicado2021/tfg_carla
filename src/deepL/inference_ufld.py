@@ -61,7 +61,7 @@ def procesar_camara_ufld(imagen, superficie_pygame, modelo):
     t_fin = time.perf_counter()
     tiempo_ms = (t_fin - t_inicio) * 1000.0
     historial_tiempos.append(tiempo_ms)
-    print(f"Latencia Percepción (UFLD GPU): {tiempo_ms:.2f} ms")
+    print(f"Latencia Percepción (UFLD CPU): {tiempo_ms:.2f} ms")
     
     img_rgb_lienzo = lane_visualization[:, :, ::-1]
     

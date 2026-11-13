@@ -128,7 +128,7 @@ def procesar_camara(img_rgb, profundidad_metros, K):
     t_fin = time.perf_counter()
     tiempo_ms = (t_fin - t_inicio) * 1000.0
     historial_tiempos.append(tiempo_ms)
-    print(f"Latencia Percepción (U-Net + Proyección 3D): {tiempo_ms:.2f} ms")
+    print(f"Latencia Percepción (U-Net CPU): {tiempo_ms:.2f} ms")
 
     # --- 3. DIBUJADO PARA PYGAME ---
     lienzo_prediccion = np.zeros_like(img_rgb)
