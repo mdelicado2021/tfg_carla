@@ -29,4 +29,4 @@ docker run -it \
     --env=NVIDIA_VISIBLE_DEVICES=all \
     --env=NVIDIA_DRIVER_CAPABILITIES=all \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-    carlasim/carla:0.9.16 bash CarlaUE4.sh -vulkan -RenderOffScreen -nosound -quality-level=Low -benchmark -fps=30
+    carlasim/carla:0.9.16 bash CarlaUE4.sh -vulkan -RenderOffScreen -nosound -quality-level=Low -ResX=320 -ResY=240 -benchmark -fps=30

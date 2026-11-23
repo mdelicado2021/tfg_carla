@@ -14,6 +14,9 @@ import signal
 import time
 import os
 
+# Delete memory segments fragmentation
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 historial_tiempos = []
 
 def empaquetar_pointcloud2(puntos_3d, frame_id="carla_camera"):
@@ -80,7 +83,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from unet_model import UNet
 
 # ================= 1. CARGA DEL MODELO =================
-device = torch.device('cpu') 
+# device = torch.device('cpu') 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print("Cargando modelo neuronal en memoria...")
 
 # Instanciamos la arquitectura en blanco y le inyectamos los pesos del modelo entrenado
@@ -101,7 +105,7 @@ def procesar_camara(img_rgb, profundidad_metros, K):
     img_tensor = torch.from_numpy(img_rgb_small.transpose((2, 0, 1))).float() / 255.0
     img_tensor = img_tensor.unsqueeze(0).to(device)
 
-    with torch.no_grad():
+    with torch.no_grad(), torch.amp.autocast('cuda', enabled=(device.type == 'cuda')):
         salida = modelo(img_tensor)
         mascara_binaria = torch.sigmoid(salida) > 0.5
         mascara_np_small = mascara_binaria.squeeze().cpu().numpy().astype(np.uint8)
@@ -283,7 +287,8 @@ def main():
         if not os.path.exists(path_dir):
             os.makedirs(path_dir)
             
-        path_file = os.path.join(path_dir, 'unet_times.txt')
+        sufijo = 'gpu' if device.type == 'cuda' else 'cpu'
+        path_file = os.path.join(path_dir, f'unet_{sufijo}_times.txt')
         np.savetxt(path_file, historial_tiempos)
 
         print("Limpiando entorno y restaurando simulador...")

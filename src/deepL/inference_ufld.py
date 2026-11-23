@@ -8,6 +8,9 @@ import os
 import sys
 import shutil
 from huggingface_hub import hf_hub_download
+import torch
+
+USE_GPU = torch.cuda.is_available()
 
 DIRECTORIO_ACTUAL = os.path.dirname(os.path.abspath(__file__))
 DIRECTORIO_RAIZ = os.path.abspath(os.path.join(DIRECTORIO_ACTUAL, '..', '..'))
@@ -39,13 +42,26 @@ def inicializar_modelo_ufld():
     else:
         print("Pesos UFLD encontrados en saved_models.")
 
-    print("Cargando modelo neuronal UFLD en RAM (CPU)...")
-    
-    modelo = UltrafastLaneDetector(
-        archivo_pesos, 
-        ModelType.TUSIMPLE, 
-        use_gpu=False
-    )
+    device = "GPU" if USE_GPU else "CPU"
+    print(f"Cargando modelo neuronal UFLD en {device}...")
+
+    # Interceptamos torch.load temporalmente para leer el archivo en RAM (CPU)
+    # y evitar el pico de VRAM sin modificar el repositorio externo
+    _torch_load_original = torch.load
+    def _torch_load_cpu(*args, **kwargs):
+        kwargs['map_location'] = 'cpu'
+        return _torch_load_original(*args, **kwargs)
+
+    torch.load = _torch_load_cpu
+    try:
+        modelo = UltrafastLaneDetector(
+            archivo_pesos, 
+            ModelType.TUSIMPLE, 
+            use_gpu=USE_GPU
+        )
+    finally:
+        torch.load = _torch_load_original  # Restauramos el comportamiento normal
+
     return modelo
 
 def procesar_camara_ufld(imagen, superficie_pygame, modelo):
@@ -53,15 +69,22 @@ def procesar_camara_ufld(imagen, superficie_pygame, modelo):
     array = np.reshape(array, (imagen.height, imagen.width, 4))
     img_bgr = array[:, :, :3]
     
+    if USE_GPU:
+        torch.cuda.synchronize()
     t_inicio = time.perf_counter()
     
     lane_visualization = modelo.detect_lanes(img_bgr)
     lanes_points = modelo.lanes_points
     
+    if USE_GPU:
+        torch.cuda.synchronize()
     t_fin = time.perf_counter()
+    
     tiempo_ms = (t_fin - t_inicio) * 1000.0
     historial_tiempos.append(tiempo_ms)
-    print(f"Latencia Percepción (UFLD CPU): {tiempo_ms:.2f} ms")
+    
+    etiqueta = "GPU" if USE_GPU else "CPU"
+    print(f"Latencia Percepción (UFLD {etiqueta}): {tiempo_ms:.2f} ms")
     
     img_rgb_lienzo = lane_visualization[:, :, ::-1]
     
@@ -138,7 +161,8 @@ def main():
         if not os.path.exists(path_dir):
             os.makedirs(path_dir)
             
-        path_file = os.path.join(path_dir, 'ufld_times.txt')
+        sufijo = 'gpu' if USE_GPU else 'cpu'
+        path_file = os.path.join(path_dir, f'ufld_{sufijo}_times.txt')
         np.savetxt(path_file, historial_tiempos)
 
         if world is not None and original_settings is not None:

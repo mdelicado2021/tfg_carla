@@ -16,9 +16,11 @@ algoritmos = {
     'Thresholding': 'thresholding_times.txt',
     'Canny': 'canny_times.txt',
     'Hough': 'hough_times.txt',
-    'Sliding Windows': 'sliding_times.txt',
-    'U-Net (CPU)': 'unet_times.txt',
-    'UFLD (CPU)': 'ufld_times.txt'
+    'Sliding\nWindows': 'sliding_times.txt',
+    'U-Net (CPU)': 'unet_cpu_times.txt',
+    'U-Net (GPU)': 'unet_gpu_times.txt',
+    'UFLD (CPU)': 'ufld_cpu_times.txt',
+    'UFLD (GPU)': 'ufld_gpu_times.txt',
 }
 
 medias_ms = []
@@ -59,18 +61,20 @@ for nombre, nombre_archivo in algoritmos.items():
 
 # ================= GRÁFICA COMPARATIVA (MEDIAS) =================
 if nombres_validos:
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 6))
     
     colores_base = ['#a8d0e6', '#f8e9a1', '#f76c6c', '#374785', '#24305e', '#16697a']
     colores = colores_base[:len(nombres_validos)]
     
-    bars = plt.bar(nombres_validos, medias_ms, color=colores)
+    bars = plt.bar(nombres_validos, medias_ms, color=colores, width=0.6)
 
     for bar in bars:
         yval = bar.get_height()
         desplazamiento = max(medias_ms) * 0.02
         plt.text(bar.get_x() + bar.get_width()/2, yval + desplazamiento, 
                  f'{yval:.2f} ms', ha='center', va='bottom', fontsize=11, fontweight='bold')
+
+    plt.ylim(0, max(medias_ms) * 1.15)
 
     plt.title('Comparativa de Latencia Media en Pipelines de Percepción 3D', fontsize=14, pad=15)
     plt.ylabel('Tiempo de ejecución medio (ms)', fontsize=12)
