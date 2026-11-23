@@ -53,7 +53,7 @@ git clone https://github.com/jkdxbns/autonomous-driving-carla.git
 ## Usage
 1. Start the CARLA server in the background:
 ```bash
-./CarlaUE4.sh
+./init_carla.sh
 ```
 
 2. (Optional) Source the ROS 2 environment if 3D point cloud publishing is required:
