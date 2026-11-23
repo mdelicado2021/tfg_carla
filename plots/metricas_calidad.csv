@@ -1,0 +1,4 @@
+Modelo,IoU,F1-Score,Precision,Recall
+Thresholding,0.6138,0.7451,0.9995,0.6139
+U-Net (Casera),0.3643,0.4993,0.8953,0.3800
+U-Net SMP (ResNet-18),0.4317,0.5872,0.7687,0.4875

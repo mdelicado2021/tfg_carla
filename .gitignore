@@ -14,6 +14,7 @@ Thumbs.db
 *.zip
 *.pth
 dataset/
+eval_dataset/
 
 # Registros de rendimiento local
 times/*.txt
